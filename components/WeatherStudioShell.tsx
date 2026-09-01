@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Graphic = {
   id: string;
@@ -8,74 +8,187 @@ type Graphic = {
   category: string;
 };
 
+type ForecastPeriod = {
+  number: number;
+  name: string;
+  startTime: string;
+  endTime: string;
+  isDaytime: boolean;
+  temperature: number;
+  temperatureUnit: string;
+  temperatureTrend: string | null;
+  probabilityOfPrecipitation: number | null;
+  windSpeed: string;
+  windDirection: string;
+  icon: string;
+  shortForecast: string;
+  detailedForecast: string;
+};
+
+type WeatherResponse = {
+  location: {
+    latitude: number;
+    longitude: number;
+    city: string | null;
+    state: string | null;
+  };
+  current: {
+    temperature: number | null;
+    temperatureUnit: "F";
+    description: string;
+    icon: string | null;
+    humidity: number | null;
+    windSpeed: string;
+    windDirection: string;
+    stationName: string;
+    observedAt: string | null;
+  };
+  forecast: ForecastPeriod[];
+  hourly: ForecastPeriod[];
+  alerts: unknown[];
+  updatedAt: string;
+};
+
+type ForecastDay = {
+  day: string;
+  high: number | null;
+  low: number | null;
+  condition: string;
+  icon: string;
+  rainChance: number | null;
+};
+
 const graphics: Graphic[] = [
   {
     id: "current",
     name: "Current Conditions",
-    category: "Forecast"
+    category: "Forecast",
   },
   {
     id: "today",
     name: "Today's Forecast",
-    category: "Forecast"
+    category: "Forecast",
   },
   {
     id: "seven",
     name: "7-Day Forecast",
-    category: "Forecast"
+    category: "Forecast",
   },
   {
     id: "radar",
     name: "Live Radar",
-    category: "Radar"
+    category: "Radar",
   },
   {
     id: "warnings",
     name: "Watches & Warnings",
-    category: "Severe"
+    category: "Severe",
   },
   {
     id: "spc",
     name: "SPC Outlook",
-    category: "Severe"
+    category: "Severe",
   },
   {
     id: "models",
     name: "Model Viewer",
-    category: "Models"
-  }
-];
-
-const forecast = [
-  ["MON", "89°", "68°", "Partly Cloudy"],
-  ["TUE", "91°", "70°", "Scattered Storms"],
-  ["WED", "88°", "67°", "Storms"],
-  ["THU", "85°", "64°", "Mostly Sunny"],
-  ["FRI", "86°", "65°", "Sunny"],
-  ["SAT", "87°", "66°", "Partly Cloudy"],
-  ["SUN", "89°", "68°", "Isolated Storm"]
+    category: "Models",
+  },
 ];
 
 export default function WeatherStudioShell() {
   const [activeId, setActiveId] = useState("seven");
   const [onAir, setOnAir] = useState(false);
-  const [location, setLocation] = useState("Atlanta, GA");
 
-  const activeGraphic = useMemo(() => {
-    return (
-      graphics.find((graphic) => graphic.id === activeId) ??
-      graphics[0]
-    );
-  }, [activeId]);
+  const [location, setLocation] =
+    useState("Atlanta, GA");
+
+  const [weather, setWeather] =
+    useState<WeatherResponse | null>(null);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [weatherError, setWeatherError] =
+    useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadWeather() {
+      try {
+        setLoading(true);
+        setWeatherError(null);
+
+        const response =
+          await fetch("/api/weather");
+
+        if (!response.ok) {
+          throw new Error(
+            `Weather request failed: ${response.status}`
+          );
+        }
+
+        const data: WeatherResponse =
+          await response.json();
+
+        setWeather(data);
+
+        if (
+          data.location.city &&
+          data.location.state
+        ) {
+          setLocation(
+            `${data.location.city}, ${data.location.state}`
+          );
+        }
+      } catch (error) {
+        console.error(error);
+
+        setWeatherError(
+          "Unable to load live NWS weather data."
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadWeather();
+  }, []);
+
+  const activeGraphic =
+    useMemo(() => {
+      return (
+        graphics.find(
+          (graphic) =>
+            graphic.id === activeId
+        ) ?? graphics[0]
+      );
+    }, [activeId]);
+
+  const sevenDayForecast =
+    useMemo(() => {
+      if (!weather) {
+        return [];
+      }
+
+      return buildSevenDayForecast(
+        weather.forecast
+      );
+    }, [weather]);
 
   const nextGraphic = () => {
-    const index = graphics.findIndex(
-      (graphic) => graphic.id === activeId
+    const index =
+      graphics.findIndex(
+        (graphic) =>
+          graphic.id === activeId
+      );
+
+    const nextIndex =
+      (index + 1) %
+      graphics.length;
+
+    setActiveId(
+      graphics[nextIndex].id
     );
-
-    const nextIndex = (index + 1) % graphics.length;
-
-    setActiveId(graphics[nextIndex].id);
   };
 
   return (
@@ -87,7 +200,8 @@ export default function WeatherStudioShell() {
           </div>
 
           <div className="subbrand">
-            Broadcast Graphics Console · Prototype 0.1
+            Broadcast Graphics Console ·
+            Live NWS Prototype
           </div>
         </div>
 
@@ -105,10 +219,13 @@ export default function WeatherStudioShell() {
           </div>
 
           <div className="clock">
-            {new Date().toLocaleTimeString([], {
-              hour: "numeric",
-              minute: "2-digit"
-            })}
+            {new Date().toLocaleTimeString(
+              [],
+              {
+                hour: "numeric",
+                minute: "2-digit",
+              }
+            )}
           </div>
         </div>
       </header>
@@ -130,33 +247,36 @@ export default function WeatherStudioShell() {
             id="location"
             className="locationInput"
             value={location}
-            onChange={(event) =>
-              setLocation(event.target.value)
-            }
+            readOnly
           />
 
           <div className="graphicList">
-            {graphics.map((graphic) => (
-              <button
-                key={graphic.id}
-                className={
-                  activeId === graphic.id
-                    ? "graphicButton active"
-                    : "graphicButton"
-                }
-                onClick={() =>
-                  setActiveId(graphic.id)
-                }
-              >
-                <span>
-                  {graphic.name}
-                </span>
+            {graphics.map(
+              (graphic) => (
+                <button
+                  key={graphic.id}
+                  className={
+                    activeId ===
+                    graphic.id
+                      ? "graphicButton active"
+                      : "graphicButton"
+                  }
+                  onClick={() =>
+                    setActiveId(
+                      graphic.id
+                    )
+                  }
+                >
+                  <span>
+                    {graphic.name}
+                  </span>
 
-                <small>
-                  {graphic.category}
-                </small>
-              </button>
-            ))}
+                  <small>
+                    {graphic.category}
+                  </small>
+                </button>
+              )
+            )}
           </div>
         </aside>
 
@@ -178,21 +298,39 @@ export default function WeatherStudioShell() {
           </div>
 
           <div className="previewFrame">
-            {activeId === "seven" ? (
-              <SevenDay location={location} />
-            ) : activeId === "radar" ? (
+            {activeId ===
+            "seven" ? (
+              <SevenDay
+                location={location}
+                forecast={
+                  sevenDayForecast
+                }
+                loading={loading}
+                error={weatherError}
+              />
+            ) : activeId ===
+              "current" ? (
+              <CurrentConditions
+                location={location}
+                weather={weather}
+                loading={loading}
+              />
+            ) : activeId ===
+              "radar" ? (
               <Placeholder
                 title="LIVE RADAR"
-                subtitle="MapLibre + NEXRAD layer comes next"
+                subtitle="NEXRAD map layer comes next"
                 location={location}
               />
-            ) : activeId === "warnings" ? (
+            ) : activeId ===
+              "warnings" ? (
               <Placeholder
                 title="WATCHES & WARNINGS"
-                subtitle="NWS polygon feed comes next"
+                subtitle="Live NWS alerts are connected and will be visualized next"
                 location={location}
               />
-            ) : activeId === "models" ? (
+            ) : activeId ===
+              "models" ? (
               <Placeholder
                 title="MODEL VIEWER"
                 subtitle="HRRR · NAM · GFS planned"
@@ -200,10 +338,8 @@ export default function WeatherStudioShell() {
               />
             ) : (
               <Placeholder
-                title={
-                  activeGraphic.name.toUpperCase()
-                }
-                subtitle="Graphic template ready for live data"
+                title={activeGraphic.name.toUpperCase()}
+                subtitle="Graphic template ready"
                 location={location}
               />
             )}
@@ -230,7 +366,9 @@ export default function WeatherStudioShell() {
 
             <button
               className="secondary"
-              onClick={nextGraphic}
+              onClick={
+                nextGraphic
+              }
             >
               NEXT GRAPHIC →
             </button>
@@ -265,7 +403,9 @@ export default function WeatherStudioShell() {
               <span>Forecast</span>
 
               <b className="mock">
-                MOCK
+                {weather
+                  ? "LIVE"
+                  : "LOAD"}
               </b>
             </div>
 
@@ -278,10 +418,14 @@ export default function WeatherStudioShell() {
             </div>
 
             <div className="dataRow">
-              <span>NWS Alerts</span>
+              <span>
+                NWS Alerts
+              </span>
 
-              <b className="offline">
-                NEXT
+              <b className="mock">
+                {weather
+                  ? weather.alerts.length
+                  : "—"}
               </b>
             </div>
           </div>
@@ -300,9 +444,7 @@ export default function WeatherStudioShell() {
                 Today's Forecast
               </li>
 
-              <li>
-                Live Radar
-              </li>
+              <li>Live Radar</li>
 
               <li>
                 7-Day Forecast
@@ -316,9 +458,15 @@ export default function WeatherStudioShell() {
 }
 
 function SevenDay({
-  location
+  location,
+  forecast,
+  loading,
+  error,
 }: {
   location: string;
+  forecast: ForecastDay[];
+  loading: boolean;
+  error: string | null;
 }) {
   return (
     <div className="graphic sevenDay">
@@ -338,54 +486,159 @@ function SevenDay({
         </div>
       </div>
 
-      <div className="forecastGrid">
-        {forecast.map(
-          ([
-            day,
-            high,
-            low,
-            condition
-          ]) => (
-            <div
-              className="dayCard"
-              key={day}
-            >
-              <div className="day">
-                {day}
-              </div>
+      {loading ? (
+        <div className="placeholderCopy">
+          <strong>
+            LOADING NWS DATA
+          </strong>
 
-              <div className="weatherIcon">
-                {condition.includes(
-                  "Storm"
-                )
-                  ? "⛈"
-                  : condition.includes(
-                      "Sunny"
-                    )
-                  ? "☀"
-                  : "⛅"}
-              </div>
+          <span>
+            Retrieving live forecast...
+          </span>
+        </div>
+      ) : error ? (
+        <div className="placeholderCopy">
+          <strong>
+            WEATHER DATA ERROR
+          </strong>
 
-              <div className="high">
-                {high}
-              </div>
+          <span>{error}</span>
+        </div>
+      ) : (
+        <div className="forecastGrid">
+          {forecast.map(
+            (day) => (
+              <div
+                className="dayCard"
+                key={day.day}
+              >
+                <div className="day">
+                  {day.day}
+                </div>
 
-              <div className="low">
-                {low}
-              </div>
+                <img
+                  className="weatherIconImage"
+                  src={day.icon}
+                  alt={day.condition}
+                />
 
-              <div className="condition">
-                {condition}
+                <div className="high">
+                  {day.high !== null
+                    ? `${day.high}°`
+                    : "—"}
+                </div>
+
+                <div className="low">
+                  {day.low !== null
+                    ? `${day.low}°`
+                    : "—"}
+                </div>
+
+                <div className="condition">
+                  {day.condition}
+                </div>
+
+                {day.rainChance !==
+                  null && (
+                  <div className="rainChance">
+                    💧{" "}
+                    {day.rainChance}%
+                  </div>
+                )}
               </div>
-            </div>
-          )
-        )}
-      </div>
+            )
+          )}
+        </div>
+      )}
 
       <div className="ticker">
-        Prototype forecast data · Live NWS
-        data will replace this in the next
-        build
+        LIVE · National Weather Service
+        forecast data
+      </div>
+    </div>
+  );
+}
+
+function CurrentConditions({
+  location,
+  weather,
+  loading,
+}: {
+  location: string;
+  weather: WeatherResponse | null;
+  loading: boolean;
+}) {
+  return (
+    <div className="graphic placeholderGraphic">
+      <div className="graphicTop">
+        <div>
+          <span>
+            CURRENT WEATHER
+          </span>
+
+          <h1>
+            CURRENT CONDITIONS
+          </h1>
+        </div>
+
+        <div className="locationTag">
+          {location}
+        </div>
+      </div>
+
+      <div className="placeholderMap">
+        <div className="mapGrid" />
+
+        <div className="placeholderCopy">
+          {loading ||
+          !weather ? (
+            <>
+              <strong>
+                LOADING
+              </strong>
+
+              <span>
+                Retrieving observation...
+              </span>
+            </>
+          ) : (
+            <>
+              <strong>
+                {weather.current
+                  .temperature !==
+                null
+                  ? `${weather.current.temperature}°`
+                  : "—"}
+              </strong>
+
+              <span>
+                {
+                  weather.current
+                    .description
+                }
+              </span>
+
+              <span>
+                Humidity:{" "}
+                {weather.current
+                  .humidity ?? "—"}
+                %
+              </span>
+
+              <span>
+                Wind:{" "}
+                {
+                  weather.current
+                    .windDirection
+                }{" "}
+                {
+                  weather.current
+                    .windSpeed
+                }
+              </span>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -394,7 +647,7 @@ function SevenDay({
 function Placeholder({
   title,
   subtitle,
-  location
+  location,
 }: {
   title: string;
   subtitle: string;
@@ -433,4 +686,78 @@ function Placeholder({
       </div>
     </div>
   );
+}
+
+function buildSevenDayForecast(
+  periods: ForecastPeriod[]
+): ForecastDay[] {
+  const days = new Map<
+    string,
+    ForecastDay
+  >();
+
+  for (const period of periods) {
+    const date =
+      period.startTime.slice(0, 10);
+
+    const existing =
+      days.get(date);
+
+    if (!existing) {
+      days.set(date, {
+        day: formatDay(
+          period.startTime
+        ),
+        high: period.isDaytime
+          ? period.temperature
+          : null,
+        low: period.isDaytime
+          ? null
+          : period.temperature,
+        condition:
+          period.shortForecast,
+        icon: period.icon,
+        rainChance:
+          period.probabilityOfPrecipitation,
+      });
+
+      continue;
+    }
+
+    if (period.isDaytime) {
+      existing.high =
+        period.temperature;
+
+      existing.condition =
+        period.shortForecast;
+
+      existing.icon =
+        period.icon;
+
+      existing.rainChance =
+        period.probabilityOfPrecipitation;
+    } else {
+      existing.low =
+        period.temperature;
+    }
+  }
+
+  return Array.from(
+    days.values()
+  ).slice(0, 7);
+}
+
+function formatDay(
+  dateString: string
+) {
+  return new Date(
+    dateString
+  )
+    .toLocaleDateString(
+      "en-US",
+      {
+        weekday: "short",
+      }
+    )
+    .toUpperCase();
 }
