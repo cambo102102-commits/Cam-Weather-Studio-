@@ -1,1 +1,866 @@
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #080d14;
+  color: #f4f7fb;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: #080d14;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* ================================
+   MAIN WEATHER STUDIO
+================================ */
+
+.studio {
+  min-height: 100vh;
+
+  background:
+    radial-gradient(
+      circle at 70% 0%,
+      rgba(27, 93, 170, 0.18),
+      transparent 34rem
+    ),
+    #080d14;
+}
+
+/* ================================
+   TOP BAR
+================================ */
+
+.topbar {
+  min-height: 74px;
+
+  border-bottom: 1px solid #273242;
+
+  background: #0d141f;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 14px 20px;
+}
+
+.brand {
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  font-size: 21px;
+}
+
+.subbrand {
+  margin-top: 4px;
+
+  color: #7f90a5;
+
+  font-size: 12px;
+}
+
+.statusWrap {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.status,
+.clock {
+  border: 1px solid #314055;
+
+  background: #111b29;
+
+  padding: 9px 12px;
+
+  border-radius: 8px;
+
+  font-size: 12px;
+
+  font-weight: 800;
+}
+
+.status.live {
+  background: #8f1521;
+
+  border-color: #d14754;
+}
+
+/* ================================
+   MAIN WORKSPACE
+================================ */
+
+.workspace {
+  display: grid;
+
+  grid-template-columns:
+    240px
+    minmax(520px, 1fr)
+    230px;
+
+  min-height: calc(100vh - 74px);
+}
+
+/* ================================
+   SIDE PANELS
+================================ */
+
+.sidebar,
+.inspector {
+  background: #0d141f;
+
+  padding: 16px;
+}
+
+.sidebar {
+  border-right: 1px solid #273242;
+}
+
+.inspector {
+  border-left: 1px solid #273242;
+}
+
+.panelTitle {
+  font-size: 11px;
+
+  letter-spacing: 0.14em;
+
+  font-weight: 900;
+
+  color: #718298;
+
+  margin-bottom: 14px;
+}
+
+/* ================================
+   LOCATION FIELD
+================================ */
+
+.fieldLabel {
+  display: block;
+
+  font-size: 11px;
+
+  color: #8da0b8;
+
+  margin-bottom: 6px;
+}
+
+.locationInput {
+  width: 100%;
+
+  background: #121c2a;
+
+  color: white;
+
+  border: 1px solid #314055;
+
+  border-radius: 7px;
+
+  padding: 10px;
+
+  outline: none;
+
+  margin-bottom: 15px;
+}
+
+.locationInput:focus {
+  border-color: #4d8cd9;
+}
+
+/* ================================
+   GRAPHICS MENU
+================================ */
+
+.graphicList {
+  display: grid;
+
+  gap: 7px;
+}
+
+.graphicButton {
+  width: 100%;
+
+  text-align: left;
+
+  border: 1px solid #263448;
+
+  background: #111a27;
+
+  color: #dce5ef;
+
+  padding: 11px;
+
+  border-radius: 7px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.graphicButton:hover {
+  border-color: #3d5878;
+
+  background: #152235;
+}
+
+.graphicButton small {
+  color: #6f829b;
+}
+
+.graphicButton.active {
+  border-color: #4794ef;
+
+  background:
+    linear-gradient(
+      90deg,
+      #123760,
+      #142033
+    );
+}
+
+/* ================================
+   CENTER PREVIEW AREA
+================================ */
+
+.center {
+  padding: 18px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  min-width: 0;
+}
+
+.previewHeader {
+  display: flex;
+
+  justify-content: space-between;
+
+  margin-bottom: 10px;
+
+  color: #dce5ef;
+}
+
+.previewHeader > div {
+  display: flex;
+
+  gap: 10px;
+
+  align-items: baseline;
+}
+
+.eyebrow {
+  color: #71839a;
+
+  font-size: 10px;
+
+  letter-spacing: 0.13em;
+
+  text-transform: uppercase;
+}
+
+.resolution {
+  color: #687991;
+
+  font-size: 11px;
+}
+
+/* ================================
+   16:9 BROADCAST PREVIEW
+================================ */
+
+.previewFrame {
+  aspect-ratio: 16 / 9;
+
+  width: 100%;
+
+  max-height: calc(100vh - 190px);
+
+  margin: auto;
+
+  border: 2px solid #394b63;
+
+  box-shadow:
+    0 24px 70px
+    rgba(0, 0, 0, 0.45);
+
+  background: #03070c;
+
+  overflow: hidden;
+}
+
+.graphic {
+  height: 100%;
+
+  position: relative;
+
+  overflow: hidden;
+}
+
+/* ================================
+   SEVEN DAY FORECAST
+================================ */
+
+.sevenDay {
+  background:
+    radial-gradient(
+      circle at 15% 10%,
+      rgba(69, 143, 237, 0.55),
+      transparent 27rem
+    ),
+    linear-gradient(
+      145deg,
+      #0d2a4a 0%,
+      #07121f 48%,
+      #0a1830 100%
+    );
+
+  padding: 4% 4% 0;
+
+  display: flex;
+
+  flex-direction: column;
+}
+
+.graphicTop {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: flex-end;
+
+  margin-bottom: 4%;
+
+  position: relative;
+
+  z-index: 2;
+}
+
+.graphicTop span {
+  font-size:
+    clamp(
+      9px,
+      1vw,
+      15px
+    );
+
+  font-weight: 800;
+
+  letter-spacing: 0.15em;
+
+  color: #9fc8f6;
+}
+
+.graphicTop h1 {
+  margin: 3px 0 0;
+
+  font-size:
+    clamp(
+      24px,
+      4.5vw,
+      68px
+    );
+
+  letter-spacing: -0.04em;
+
+  line-height: 0.95;
+}
+
+.locationTag {
+  background:
+    rgba(
+      4,
+      10,
+      19,
+      0.62
+    );
+
+  border:
+    1px solid
+    rgba(
+      144,
+      190,
+      242,
+      0.42
+    );
+
+  padding: 8px 12px;
+
+  border-radius: 7px;
+
+  font-size:
+    clamp(
+      9px,
+      1vw,
+      15px
+    );
+
+  font-weight: 800;
+}
+
+/* ================================
+   FORECAST CARDS
+================================ */
+
+.forecastGrid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(7, 1fr);
+
+  gap: 1.1%;
+
+  flex: 1;
+}
+
+.dayCard {
+  min-width: 0;
+
+  border:
+    1px solid
+    rgba(
+      162,
+      198,
+      238,
+      0.25
+    );
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(
+        28,
+        65,
+        108,
+        0.9
+      ),
+      rgba(
+        4,
+        12,
+        23,
+        0.88
+      )
+    );
+
+  text-align: center;
+
+  border-radius: 7px;
+
+  padding: 8% 4%;
+}
+
+.day {
+  font-weight: 900;
+
+  font-size:
+    clamp(
+      11px,
+      1.3vw,
+      21px
+    );
+}
+
+.weatherIcon {
+  font-size:
+    clamp(
+      27px,
+      4vw,
+      60px
+    );
+
+  margin: 13% 0;
+}
+
+.high {
+  font-size:
+    clamp(
+      25px,
+      4.2vw,
+      63px
+    );
+
+  line-height: 1;
+
+  font-weight: 900;
+}
+
+.low {
+  color: #99b7d8;
+
+  font-size:
+    clamp(
+      14px,
+      2vw,
+      27px
+    );
+
+  margin-top: 6%;
+}
+
+.condition {
+  margin-top: 15%;
+
+  color: #c8d8e9;
+
+  font-size:
+    clamp(
+      8px,
+      0.9vw,
+      13px
+    );
+
+  line-height: 1.15;
+}
+
+/* ================================
+   FORECAST TICKER
+================================ */
+
+.ticker {
+  margin: 3% -4% 0;
+
+  padding: 1.2% 4%;
+
+  background:
+    rgba(
+      3,
+      8,
+      15,
+      0.88
+    );
+
+  border-top:
+    1px solid
+    rgba(
+      150,
+      187,
+      230,
+      0.2
+    );
+
+  font-size:
+    clamp(
+      8px,
+      0.8vw,
+      12px
+    );
+
+  color: #9fb2c9;
+}
+
+/* ================================
+   RADAR / MODEL PLACEHOLDERS
+================================ */
+
+.placeholderGraphic {
+  background:
+    linear-gradient(
+      150deg,
+      #0b1a2a,
+      #02070d
+    );
+
+  padding: 4%;
+
+  display: flex;
+
+  flex-direction: column;
+}
+
+.placeholderMap {
+  position: relative;
+
+  flex: 1;
+
+  border: 1px solid #244161;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 30% 50%,
+      rgba(
+        42,
+        142,
+        219,
+        0.18
+      ),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 63% 30%,
+      rgba(
+        37,
+        189,
+        145,
+        0.12
+      ),
+      transparent 20%
+    ),
+    #07131e;
+}
+
+.mapGrid {
+  position: absolute;
+
+  inset: 0;
+
+  background-image:
+    linear-gradient(
+      rgba(
+        73,
+        118,
+        156,
+        0.13
+      )
+      1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(
+        73,
+        118,
+        156,
+        0.13
+      )
+      1px,
+      transparent 1px
+    );
+
+  background-size:
+    8% 12%;
+}
+
+.placeholderCopy {
+  position: absolute;
+
+  inset: 0;
+
+  display: grid;
+
+  place-content: center;
+
+  text-align: center;
+
+  gap: 7px;
+}
+
+.placeholderCopy strong {
+  font-size:
+    clamp(
+      26px,
+      4vw,
+      62px
+    );
+}
+
+.placeholderCopy span {
+  color: #83a2c3;
+
+  font-size:
+    clamp(
+      10px,
+      1.3vw,
+      18px
+    );
+}
+
+/* ================================
+   BROADCAST CONTROLS
+================================ */
+
+.transport {
+  display: flex;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  margin-top: 14px;
+}
+
+.transport button {
+  border-radius: 7px;
+
+  min-width: 118px;
+
+  padding: 10px 17px;
+
+  font-size: 12px;
+
+  font-weight: 900;
+}
+
+.secondary {
+  color: #cbd8e7;
+
+  border: 1px solid #35465b;
+
+  background: #111a27;
+}
+
+.secondary:hover {
+  background: #182538;
+}
+
+.take {
+  color: white;
+
+  border: 1px solid #418fe7;
+
+  background: #1769c5;
+}
+
+.take:hover {
+  background: #2378d8;
+}
+
+/* ================================
+   RIGHT CONTROL PANEL
+================================ */
+
+.controlCard {
+  background: #111a27;
+
+  border: 1px solid #27374b;
+
+  border-radius: 8px;
+
+  padding: 12px;
+
+  margin-bottom: 10px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 6px;
+}
+
+.controlCard strong {
+  font-size: 14px;
+}
+
+.controlCard small {
+  color: #71839a;
+}
+
+.dataRow {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  border-top: 1px solid #263448;
+
+  padding-top: 7px;
+
+  font-size: 11px;
+}
+
+.mock,
+.offline {
+  font-size: 9px;
+
+  border-radius: 5px;
+
+  padding: 3px 5px;
+}
+
+.mock {
+  background: #755d14;
+
+  color: #ffdb63;
+}
+
+.offline {
+  background: #263448;
+
+  color: #91a2b7;
+}
+
+/* ================================
+   SHOW PLAYLIST
+================================ */
+
+.playlist {
+  margin: 2px 0 0;
+
+  padding-left: 20px;
+
+  color: #aebed0;
+
+  font-size: 11px;
+
+  line-height: 1.8;
+}
+
+/* ================================
+   RESPONSIVE LAYOUT
+================================ */
+
+@media (max-width: 1000px) {
+  .workspace {
+    grid-template-columns:
+      190px
+      minmax(450px, 1fr);
+  }
+
+  .inspector {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .workspace {
+    display: block;
+  }
+
+  .sidebar {
+    border-right: 0;
+
+    border-bottom:
+      1px solid #273242;
+  }
+
+  .graphicList {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+
+  .center {
+    padding: 10px;
+  }
+
+  .previewFrame {
+    max-height: none;
+  }
+
+  .subbrand,
+  .resolution {
+    display: none;
+  }
+}
 
